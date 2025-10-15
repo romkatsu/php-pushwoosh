@@ -237,7 +237,14 @@ class Notification implements \JsonSerializable
      * @var int
      */
     private $sendRate;
-    
+
+    /**
+     * If set to true, throttling limit will not be applied to this specific push notification
+     *
+     * @var bool
+     */
+    private $sendRateAvoid;
+
     /**
      * The timezone to use with the `sendDate` property, if ignored UTC-0 is default in "send_date".
      * See http://php.net/manual/timezones.php for the list of the supported timezones.
@@ -355,7 +362,7 @@ class Notification implements \JsonSerializable
     {
         return $this->blackBerry;
     }
-    
+
     /**
      * Gets the campaign code to which you want to assign this push message.
      *
@@ -365,7 +372,7 @@ class Notification implements \JsonSerializable
     {
         return $this->campain;
     }
-    
+
     /**
      * Gets the object which contains specific Pushwoosh notification informations for Chrome.
      *
@@ -553,7 +560,7 @@ class Notification implements \JsonSerializable
     {
         return $this->platforms;
     }
-    
+
     /**
      * Gets the Push Preset ID from your Control Panel.
      *
@@ -563,7 +570,7 @@ class Notification implements \JsonSerializable
     {
         return $this->preset;
     }
-    
+
     /**
      * Gets the remote Rich HTML Page URL. <scheme>://<authority>.
      *
@@ -573,7 +580,7 @@ class Notification implements \JsonSerializable
     {
         return $this->remotePage;
     }
-    
+
     /**
      * Gets the new Rich HTML page identifier.
      *
@@ -607,7 +614,7 @@ class Notification implements \JsonSerializable
     {
         return $this->sendDate;
     }
-    
+
     /**
      * Gets the throttling, valid values are from 100 to 1000 pushes/second.
      *
@@ -617,7 +624,15 @@ class Notification implements \JsonSerializable
     {
         return $this->sendRate;
     }
-    
+
+    /**
+     * @return bool
+     */
+    public function getSendRateAvoid()
+    {
+        return $this->sendRateAvoid;
+    }
+
     /**
      * Gets the timezone to use with the `sendDate` property, if ignored UTC-0 is default in `sendDate`. See
      * http://php.net/manual/timezones.php for the list of the supported timezones.
@@ -660,20 +675,20 @@ class Notification implements \JsonSerializable
     {
         return $this->huawei;
     }
-    
+
     /**
      * Creates a JSON representation of this request.
      *
      * @return array a PHP which can be passed to the 'json_encode' PHP method.
      */
-    public function jsonSerialize(): mixed
+    public function jsonSerialize()
     {
         $json = [];
-    
+
         // Mandatory parameters
         $json['ignore_user_timezone'] = $this->ignoreUserTimezone;
         $json['send_date'] = is_string($this->sendDate) ? $this->sendDate : $this->sendDate->format('Y-m-d H:i');
-    
+
         // Optional parameters
         isset($this->campain) ? $json['campaign'] = $this->campain : false;
         isset($this->content) ? $json['content'] = $this->content : false;
@@ -685,29 +700,30 @@ class Notification implements \JsonSerializable
         isset($this->pageId) ? $json['page_id'] = $this->pageId : false;
         isset($this->remotePage) ? $json['remote_page'] = $this->remotePage : false;
         isset($this->richPageId) ? $json['rich_page_id'] = $this->richPageId : false;
-        isset($this->sendRate)? $json['send_rate'] = $this->sendRate : false;
-        isset($this->timezone)? $json['timezone'] = $this->timezone : false;
+        isset($this->sendRate) ? $json['send_rate'] = $this->sendRate : false;
+        isset($this->timezone) ? $json['timezone'] = $this->timezone : false;
+        isset($this->sendRateAvoid) ? $json['send_rate_avoid'] = $this->sendRateAvoid : false;
 
         if (isset($this->conditions)) {
             $conditionsArray = [];
-    
+
             foreach ($this->conditions as $condition) {
                 $conditionsArray[] = $condition->jsonSerialize();
             }
-    
+
             $json['conditions'] = $conditionsArray;
         }
-    
+
         if (isset($this->platforms)) {
             $platformsArray = [];
-    
+
             foreach ($this->platforms as $platform) {
                 $platformsArray[] = $platform->getValue();
             }
-    
+
             $json['platforms'] = $platformsArray;
         }
-    
+
         // Merge specific platforms informations
         return JsonUtils::mergeJsonSerializables(
             $json,
@@ -769,7 +785,7 @@ class Notification implements \JsonSerializable
 
         return $this;
     }
-    
+
     /**
      * Sets the campaign code to which you want to assign this push message.
      *
@@ -780,10 +796,10 @@ class Notification implements \JsonSerializable
     public function setCampain($campain)
     {
         $this->campain = $campain;
-         
+
         return $this;
     }
-    
+
     /**
      * Sets the object which contains specific Pushwoosh notification informations for Chrome.
      *
@@ -795,7 +811,7 @@ class Notification implements \JsonSerializable
     public function setChrome(Chrome $chrome)
     {
         $this->chrome = $chrome;
-    
+
         return $this;
     }
 
@@ -1025,7 +1041,7 @@ class Notification implements \JsonSerializable
 
         return $this;
     }
-    
+
     /**
      * Sets the Push Preset ID from your Control Panel.
      *
@@ -1036,10 +1052,10 @@ class Notification implements \JsonSerializable
     public function setPreset($preset)
     {
         $this->preset = $preset;
-         
+
         return $this;
     }
-    
+
     /**
      * Sets the remote Rich HTML Page URL. <scheme>://<authority>.
      *
@@ -1050,10 +1066,10 @@ class Notification implements \JsonSerializable
     public function setRemotePage($remotePage)
     {
         $this->remotePage = $remotePage;
-        
+
         return $this;
     }
-    
+
     /**
      * Sets the new Rich HTML page identifier.
      *
@@ -1064,7 +1080,7 @@ class Notification implements \JsonSerializable
     public function setRichPageId($richPageId)
     {
         $this->richPageId = $richPageId;
-         
+
         return $this;
     }
 
@@ -1116,7 +1132,7 @@ class Notification implements \JsonSerializable
 
         return $this;
     }
-    
+
     /**
      * Sets the throttling, valid values are from 100 to 1000 pushes/second.
      *
@@ -1127,7 +1143,19 @@ class Notification implements \JsonSerializable
     public function setSendRate($sendRate)
     {
         $this->sendRate = $sendRate;
-    
+
+        return $this;
+    }
+
+    /**
+     * @param bool $sendRateAvoid
+     *
+     * @return \Gomoob\Pushwoosh\Model\Notification\Notification this instance.
+     */
+    public function setSendRateAvoid($sendRateAvoid)
+    {
+        $this->sendRateAvoid = $sendRateAvoid;
+
         return $this;
     }
 
